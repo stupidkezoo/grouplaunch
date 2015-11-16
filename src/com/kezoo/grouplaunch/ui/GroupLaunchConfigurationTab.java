@@ -39,7 +39,7 @@ public class GroupLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
 	
     private ButtonGroupController buttonGroupController;
     private TreeViewController treeViewController;
-	private List<GroupItemLaunchConfiguration> configurations = new ArrayList<GroupItemLaunchConfiguration>();
+	private ArrayList<GroupItemLaunchConfiguration> configurations = new ArrayList<GroupItemLaunchConfiguration>();
 
 	@Override
 	public void createControl(Composite parent) {
@@ -69,6 +69,7 @@ public class GroupLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
         addressTree.setHeaderVisible(true);
         addressTree.setLinesVisible(true);
         addressTree.setLayoutData(new GridData(GridData.FILL_BOTH));
+     
         
         TreeColumn column0 = new TreeColumn(addressTree, SWT.LEFT);
         column0.setAlignment(SWT.LEFT);

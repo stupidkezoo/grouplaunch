@@ -1,5 +1,7 @@
 package com.kezoo.grouplaunch.core;
 
+import java.util.UUID;
+
 import org.eclipse.debug.core.ILaunchConfiguration;
 
 public class GroupItemLaunchConfiguration {
@@ -15,7 +17,7 @@ public class GroupItemLaunchConfiguration {
         PROFILE
     }
     
-    private int index;
+    private int index = UUID.randomUUID().hashCode();
     private PostLaunchAction postLaunchAction;
     private LaunchMode launchMode;
     private boolean enabled;

@@ -1,5 +1,7 @@
 package com.kezoo.grouplaunch.ui;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.jface.viewers.BaseLabelProvider;
@@ -9,6 +11,7 @@ import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.TreeItem;
 
 import com.kezoo.grouplaunch.core.GroupItemLaunchConfiguration;
 import com.kezoo.grouplaunch.ui.UIProps.ButtonType;
@@ -16,14 +19,14 @@ import com.kezoo.grouplaunch.ui.UIProps.ButtonType;
 public class TreeViewController implements ButtonGroupEventListener {
     
     private TreeViewer treeViewer;
-    protected List<GroupItemLaunchConfiguration> configurations;
+    protected ArrayList<GroupItemLaunchConfiguration> configurations;
 
     public TreeViewController(TreeViewer treeViewer) {
         this.treeViewer = treeViewer;
         init();
     }
     
-    public void setContent(List<GroupItemLaunchConfiguration> configurations) {
+    public void setContent(ArrayList<GroupItemLaunchConfiguration> configurations) {
         this.configurations = configurations;
         treeViewer.setInput(configurations);
     }
@@ -37,23 +40,56 @@ public class TreeViewController implements ButtonGroupEventListener {
     public void onButtonPressed(ButtonType buttonType) {
         switch(buttonType) {
         case ADD:
-            
+            configurations.add(configurations.size(), new GroupItemLaunchConfiguration());
+            treeViewer.refresh();
             break;
         case REMOVE:
-            treeViewer.remove(configurations.remove(0));
+            List<Integer> indexes = getMultiSelectedIndex();
+            for (int i = indexes.size() - 1; i >= 0; --i) {
+                configurations.remove((int)indexes.get(i));
+            }
+            treeViewer.refresh();
             break;
         case EDIT:
             
             break;
-        case UP:
-    
+        case UP: {
+            int index = getSingleSelectedIndex();
+            Collections.swap(configurations, index, index - 1);
+            treeViewer.refresh();
             break;
-        case DOWN:
-    
+        }
+        case DOWN: {
+            int index = getSingleSelectedIndex();
+            Collections.swap(configurations, index, index + 1);
+            treeViewer.refresh();
             break;
-        case CLEAR:
-    
+        }
+        case CLEAR: {
+            configurations.clear();
+            treeViewer.refresh();
             break;
+        }
+        }
+    }
+    
+    private List<Integer> getMultiSelectedIndex() {
+        List<Integer> indexes = new ArrayList<Integer>();
+        if (treeViewer.getTree().getSelectionCount() != 0) {
+            TreeItem[] selection = treeViewer.getTree().getSelection();
+            for (TreeItem item : selection) {
+                indexes.add(treeViewer.getTree().indexOf(item));
+            }
+        }
+        return indexes;
+    }
+    
+    private int getSingleSelectedIndex() {
+        if (treeViewer.getTree().getSelectionCount() == 1) {
+            TreeItem selection = treeViewer.getTree().getSelection()[0];
+            return treeViewer.getTree().indexOf(selection);
+        } else {
+            return -1;
         }
     }
 
@@ -102,7 +138,7 @@ public class TreeViewController implements ButtonGroupEventListener {
 
             @Override
             public String getColumnText(Object element, int columnIndex) {
-              return "kokok";
+              return ((GroupItemLaunchConfiguration)element).getIndex() + "";
             }
         }
 }
