@@ -9,13 +9,17 @@ public abstract class UIProps {
         
     }
     
+    public static final String ADD_DIALOG_TITLE = "Add dialog u asdasdaqweqweqweqasd";
+    public static final String ADD_DIALOG_LABEL = "Add dialog ";
+    public static final String POST_LAUNCH_COMBO = "Additional action";
+    
     public static enum ButtonType {
         ADD,
         REMOVE,
         EDIT,
         UP,
         DOWN,
-        CLEAR
+        CLEAR;
     }
     
     private static Map<ButtonType, String> idToIconMap;

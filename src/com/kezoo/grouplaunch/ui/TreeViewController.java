@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.eclipse.cdt.launch.internal.MultiLaunchConfigurationDelegate;
 import org.eclipse.jface.viewers.BaseLabelProvider;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
@@ -13,20 +14,20 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.TreeItem;
 
-import com.kezoo.grouplaunch.core.GroupItemLaunchConfiguration;
+import com.kezoo.grouplaunch.core.ItemLaunchConfiguration;
 import com.kezoo.grouplaunch.ui.UIProps.ButtonType;
 
 public class TreeViewController implements ButtonGroupEventListener {
     
     private TreeViewer treeViewer;
-    protected ArrayList<GroupItemLaunchConfiguration> configurations;
+    protected List<ItemLaunchConfiguration> configurations;
 
     public TreeViewController(TreeViewer treeViewer) {
         this.treeViewer = treeViewer;
         init();
     }
     
-    public void setContent(ArrayList<GroupItemLaunchConfiguration> configurations) {
+    public void setContent(List<ItemLaunchConfiguration> configurations) {
         this.configurations = configurations;
         treeViewer.setInput(configurations);
     }
@@ -40,7 +41,9 @@ public class TreeViewController implements ButtonGroupEventListener {
     public void onButtonPressed(ButtonType buttonType) {
         switch(buttonType) {
         case ADD:
-            configurations.add(configurations.size(), new GroupItemLaunchConfiguration());
+            GroupLaunchConfigurationDialog dialog = new GroupLaunchConfigurationDialog(treeViewer.getControl().getShell(), false);
+            dialog.open();
+//            configurations.add(configurations.size(), new ItemLaunchConfiguration());
             treeViewer.refresh();
             break;
         case REMOVE:
@@ -94,7 +97,7 @@ public class TreeViewController implements ButtonGroupEventListener {
     }
 
         static class ContentProvider implements IStructuredContentProvider, ITreeContentProvider {
-            protected List<GroupItemLaunchConfiguration> configurations;
+            protected List<ItemLaunchConfiguration> configurations;
 
             @Override
             public Object[] getElements(Object inputElement) {
@@ -110,7 +113,7 @@ public class TreeViewController implements ButtonGroupEventListener {
             @SuppressWarnings("unchecked") // nothing we can do about this
             public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
                 if (newInput instanceof List<?>)
-                    configurations = (List<GroupItemLaunchConfiguration>) newInput;
+                    configurations = (List<ItemLaunchConfiguration>) newInput;
             }
 
             @Override
@@ -138,7 +141,7 @@ public class TreeViewController implements ButtonGroupEventListener {
 
             @Override
             public String getColumnText(Object element, int columnIndex) {
-              return ((GroupItemLaunchConfiguration)element).getIndex() + "";
+              return ((ItemLaunchConfiguration)element).getIndex() + "";
             }
         }
 }

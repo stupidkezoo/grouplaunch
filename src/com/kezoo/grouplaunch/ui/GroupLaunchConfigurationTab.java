@@ -39,7 +39,7 @@ public class GroupLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
 	
     private ButtonGroupController buttonGroupController;
     private TreeViewController treeViewController;
-	private ArrayList<GroupItemLaunchConfiguration> configurations = new ArrayList<GroupItemLaunchConfiguration>();
+	private List<ItemLaunchConfiguration> configurations = new ArrayList<ItemLaunchConfiguration>();
 
 	@Override
 	public void createControl(Composite parent) {
@@ -52,14 +52,7 @@ public class GroupLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
         buttonGroupController = new ButtonGroupController(group);
         buttonGroupController.addListener(this);
         buttonGroupController.addListener(treeViewController);
-        configurations.add(new GroupItemLaunchConfiguration());
-        configurations.add(new GroupItemLaunchConfiguration());
-        configurations.add(new GroupItemLaunchConfiguration());
-        configurations.add(new GroupItemLaunchConfiguration());
-        configurations.add(new GroupItemLaunchConfiguration());
-        configurations.add(new GroupItemLaunchConfiguration());
         treeViewController.setContent(configurations);
-        
 	}
 	
 	private TreeViewer createTreeViewComponent(Composite comp) {
@@ -70,7 +63,6 @@ public class GroupLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
         addressTree.setLinesVisible(true);
         addressTree.setLayoutData(new GridData(GridData.FILL_BOTH));
      
-        
         TreeColumn column0 = new TreeColumn(addressTree, SWT.LEFT);
         column0.setAlignment(SWT.LEFT);
         column0.setText("#");
@@ -115,8 +107,7 @@ public class GroupLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
 
 	@Override
 	public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
-		// TODO Auto-generated method stub
-
+		//nothing
 	}
 
 	@Override
@@ -127,8 +118,7 @@ public class GroupLaunchConfigurationTab extends AbstractLaunchConfigurationTab 
 
 	@Override
 	public void performApply(ILaunchConfigurationWorkingCopy configuration) {
-		// TODO Auto-generated method stub
-
+	    GroupLaunchConfigurationDelegate.storeConfiguration(configuration, configurations);
 	}
 
 	@Override
