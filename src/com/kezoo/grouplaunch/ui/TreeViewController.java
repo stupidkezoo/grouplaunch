@@ -63,7 +63,7 @@ public class TreeViewController implements ButtonGroupEventListener {
         treeViewer.addCheckStateListener(new ICheckStateListener() {
             @Override
             public void checkStateChanged(CheckStateChangedEvent event) {
-                ((ItemLaunchConfiguration) event.getElement()).getConfig().put(Attr.ENABLED, event.getChecked() + "");
+                ((ItemLaunchConfiguration) event.getElement()).put(Attr.ENABLED, event.getChecked() + "");
                 treeViewer.refresh();
             }
         });
@@ -71,7 +71,7 @@ public class TreeViewController implements ButtonGroupEventListener {
 
             @Override
             public boolean isChecked(Object element) {
-                return Boolean.parseBoolean(((ItemLaunchConfiguration) element).getConfig().get(Attr.ENABLED));
+                return Boolean.parseBoolean(((ItemLaunchConfiguration) element).get(Attr.ENABLED));
             }
 
             @Override
@@ -106,9 +106,8 @@ public class TreeViewController implements ButtonGroupEventListener {
                     indexes[i] = addIndex++;
                 }
                 List<ItemLaunchConfiguration> list = GroupLaunchConfigurationDelegate
-                        .createItemLaunchConfigurations(launchConfigurations, addDialog.getConfig(), indexes);
+                        .populateItemLaunchConfigurations(launchConfigurations, addDialog.getConfig(), indexes);
                 configurations.addAll(list);
-                refresh();
             }
             // configurations.add(configurations.size(), new
             // ItemLaunchConfiguration());
@@ -119,39 +118,35 @@ public class TreeViewController implements ButtonGroupEventListener {
             for (int i = indexes.size() - 1; i >= 0; --i) {
                 configurations.remove((int) indexes.get(i));
             }
-            refresh();
             break;
         }
         case EDIT: {
             int index = getSingleSelectedIndex();
             GroupLaunchConfigurationDialog editDialog = new GroupLaunchConfigurationDialog(
-                    treeViewer.getControl().getShell(), configurations.get(index).getConfig());
+                    treeViewer.getControl().getShell(), configurations.get(index));
             if (Window.OK == editDialog.open()) {
                 ILaunchConfiguration launchConfiguration = editDialog.getSelectedConfigurations().get(0);
                 configurations.set(index, GroupLaunchConfigurationDelegate
-                        .createItemLaunchConfiguration(launchConfiguration, editDialog.getConfig(), index));
-                refresh();
+                        .populateItemLaunchConfiguration(launchConfiguration, editDialog.getConfig(), index));
             }
             break;
         }
         case UP: {
             int index = getSingleSelectedIndex();
             Collections.swap(configurations, index, index - 1);
-            refresh();
             break;
         }
         case DOWN: {
             int index = getSingleSelectedIndex();
             Collections.swap(configurations, index, index + 1);
-            refresh();
             break;
         }
         case CLEAR: {
             configurations.clear();
-            refresh();
             break;
         }
         }
+        refresh();
     }
 
     public void refresh() {
@@ -263,7 +258,7 @@ public class TreeViewController implements ButtonGroupEventListener {
         @Override
         public Image getColumnImage(Object element, int columnIndex) {
             if (columnIndex == 0) {
-                return DebugPluginImages.getImage(((ItemLaunchConfiguration) element).getConfig().get(Attr.ICON_ID));
+                return DebugPluginImages.getImage(((ItemLaunchConfiguration) element).get(Attr.ICON_ID));
             } else {
                 return null;
             }
@@ -271,7 +266,7 @@ public class TreeViewController implements ButtonGroupEventListener {
 
         @Override
         public String getColumnText(Object element, int columnIndex) {
-            Map<Attr, String> config = ((ItemLaunchConfiguration) element).getConfig();
+            ItemLaunchConfiguration config = ((ItemLaunchConfiguration) element);
             switch (columnIndex) {
             case 0:
                 return config.get(Attr.GROUP);

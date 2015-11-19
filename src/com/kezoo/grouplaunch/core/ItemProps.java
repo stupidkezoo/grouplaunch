@@ -21,7 +21,8 @@ public class ItemProps {
         ENABLED,
         MEMENTO,
         ICON_ID,
-        GROUP
+        GROUP,
+        DELAY
     }
     
     public static enum LaunchMode {
@@ -50,7 +51,12 @@ public class ItemProps {
     }
     
     public static String[] getPostLaunchNameArray() {
-        return  postLaunchNames.values().toArray(new String[postLaunchNames.size()]);
+        String[] result = new String[PostLaunchAction.values().length];
+        PostLaunchAction[] values = PostLaunchAction.values();
+        for (int i = 0; i < values.length; ++i){
+            result[i] = postLaunchNames.get(values[i]);
+        }
+        return result;
     }
     
     public static PostLaunchAction getPostLaunchEnum(String name) {

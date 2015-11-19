@@ -27,18 +27,22 @@ import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TabFolder;
@@ -50,10 +54,11 @@ import com.kezoo.grouplaunch.core.ItemLaunchConfiguration;
 import com.kezoo.grouplaunch.core.ItemProps;
 import com.kezoo.grouplaunch.core.ItemProps.Attr;
 import com.kezoo.grouplaunch.core.ItemProps.LaunchMode;
+import com.kezoo.grouplaunch.core.ItemProps.PostLaunchAction;
 
 public class GroupLaunchConfigurationDialog extends TitleAreaDialog implements ISelectionChangedListener {
 
-    private Map<Attr, String> currentConfig = new HashMap<Attr, String>();
+    private ItemLaunchConfiguration currentConfig;
     private Map<String, ILaunchGroup> modeToLaunchGroup = new HashMap<String, ILaunchGroup>();
     private List<String> modes = new ArrayList<String>();
     private int currentTabIndex;
@@ -64,14 +69,16 @@ public class GroupLaunchConfigurationDialog extends TitleAreaDialog implements I
     ILaunchManager manager;
     private List<ITreeSelection> currentSelectedItems = new ArrayList<ITreeSelection>();
     private TabFolder tabFolder;
-    
-    public GroupLaunchConfigurationDialog(Shell parent, Map<Attr, String> initialConfig) {
+    private Combo postLaunchCombo;
+    private Text delayText;
+
+    public GroupLaunchConfigurationDialog(Shell parent, ItemLaunchConfiguration initialConfig) {
         super(parent);
         editMode = true;
-        currentConfig = new HashMap<Attr, String>(initialConfig);
+        currentConfig = initialConfig;
         init();
     }
-    
+
     public GroupLaunchConfigurationDialog(Shell parent) {
         super(parent);
         editMode = false;
@@ -82,7 +89,8 @@ public class GroupLaunchConfigurationDialog extends TitleAreaDialog implements I
     private void init() {
         setShellStyle(getShellStyle() | SWT.RESIZE);
         manager = DebugPlugin.getDefault().getLaunchManager();
-        LaunchConfigurationManager launchConfigurationManager = DebugUIPlugin.getDefault().getLaunchConfigurationManager();
+        LaunchConfigurationManager launchConfigurationManager = DebugUIPlugin.getDefault()
+                .getLaunchConfigurationManager();
         for (ILaunchGroup launchGroup : launchConfigurationManager.getLaunchGroups()) {
             String mode = launchGroup.getMode();
             if (!modes.contains(mode)) {
@@ -176,20 +184,53 @@ public class GroupLaunchConfigurationDialog extends TitleAreaDialog implements I
     }
 
     private void createCombo(Composite parent) {
-        final Combo c = new Combo(parent, SWT.READ_ONLY);
-        c.setBounds(50, 50, 150, 65);
-        c.setText(UIProps.POST_LAUNCH_COMBO);
-        String items[] = ItemProps.getPostLaunchNameArray();
-        c.setItems(items);
-        c.select(1);
-        c.addSelectionListener(new SelectionListener() {
+        Composite comp = new Composite(parent, SWT.NONE);
+        comp.setLayout(new GridLayout(4, false));
+        comp.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        new Label(comp, SWT.NULL).setText(UIProps.POST_LAUNCH_COMBO);
+        postLaunchCombo = new Combo(comp, SWT.READ_ONLY);
+        postLaunchCombo.setBounds(50, 50, 150, 65);
+        postLaunchCombo.setItems(ItemProps.getPostLaunchNameArray());
+        postLaunchCombo.select(postLaunchCombo.indexOf(
+                ItemProps.getPostLaunchName(PostLaunchAction.valueOf(currentConfig.get(Attr.POST_LAUNCH_ACTION))), 0));
+
+        Label delayLabel = new Label(comp, SWT.NULL);
+        delayLabel.setText(UIProps.POST_LAUNCH_DELAY_COMBO);
+        delayText = new Text(comp, SWT.SINGLE | SWT.BORDER);
+        delayText.setSize(10, delayText.getSize().y);
+        // is chosen delay action
+        if (PostLaunchAction.DELAY == PostLaunchAction.valueOf(currentConfig.get(Attr.POST_LAUNCH_ACTION))) {
+            delayLabel.setVisible(true);
+            delayText.setVisible(true);
+            delayText.setText(currentConfig.get(Attr.DELAY));
+        } else {
+            delayLabel.setVisible(false);
+            delayText.setVisible(false);
+        }
+        delayText.addModifyListener(new ModifyListener() {
+
+            @Override
+            public void modifyText(ModifyEvent e) {
+                currentConfig.put(Attr.DELAY, delayText.getText());
+                validate();
+            }
+
+        });
+        postLaunchCombo.addSelectionListener(new SelectionListener() {
 
             @Override
             public void widgetSelected(SelectionEvent e) {
-                int index = c.getSelectionIndex();
+                int index = postLaunchCombo.getSelectionIndex();
                 if (index != -1) {
                     currentConfig.put(Attr.POST_LAUNCH_ACTION,
-                            ItemProps.getPostLaunchEnum(c.getItem(index)).toString());
+                            ItemProps.getPostLaunchEnum(postLaunchCombo.getItem(index)).toString());
+                    if (postLaunchCombo.getItem(index).equals(ItemProps.getPostLaunchName(PostLaunchAction.DELAY))) {
+                        delayLabel.setVisible(true);
+                        delayText.setVisible(true);
+                    } else {
+                        delayLabel.setVisible(false);
+                        delayText.setVisible(false);
+                    }
                 }
             }
 
@@ -200,13 +241,26 @@ public class GroupLaunchConfigurationDialog extends TitleAreaDialog implements I
             }
 
         });
+
     }
 
     private void validate() {
-        if (currentSelectedItems.get(currentTabIndex) != null && !currentSelectedItems.get(currentTabIndex).isEmpty()) {
-            setErrorMessage(null);
-        } else {
-            setErrorMessage("vse ploho");
+        setErrorMessage(null);
+        if (currentSelectedItems.get(currentTabIndex) == null || currentSelectedItems.get(currentTabIndex).isEmpty()) {
+            setErrorMessage(UIProps.ERROR_DIALOG_NOTHING_SELECTED);
+        }
+        validateDelayField();
+    }
+
+    private void validateDelayField() {
+        // selected delay action
+        if (postLaunchCombo.getItem((postLaunchCombo.getSelectionIndex()))
+                .equals(ItemProps.getPostLaunchName(PostLaunchAction.DELAY))) {
+            if (delayText.getText() == null || delayText.getText().trim().equals("")) {
+                setErrorMessage(UIProps.ERROR_BLANK_DELAY_FIELD);
+            } else if (!delayText.getText().matches("-?\\d+(\\.\\d+)?")) {
+                setErrorMessage(UIProps.ERROR_BAD_DELAY_FIELD);
+            }
         }
     }
 
@@ -228,21 +282,21 @@ public class GroupLaunchConfigurationDialog extends TitleAreaDialog implements I
         }
         return result;
     }
-    
-    public Map<Attr, String> getConfig() {
+
+    public ItemLaunchConfiguration getConfig() {
         return currentConfig;
     }
-    
+
     private void selectItem() {
         try {
-        ILaunchConfiguration configuration = manager.getLaunchConfiguration(currentConfig.get(Attr.MEMENTO));
-        for (int i = 0; i < trees.size(); ++i) {
-            if (currentConfig.get(Attr.LAUNCH_MODE).equals(tabFolder.getItem(i).getText())) {
-                tabFolder.setSelection(i);
-                StructuredSelection selection = new StructuredSelection(configuration);  
-                trees.get(i).getViewer().setSelection(selection, true);
+            ILaunchConfiguration configuration = manager.getLaunchConfiguration(currentConfig.get(Attr.MEMENTO));
+            for (int i = 0; i < trees.size(); ++i) {
+                if (currentConfig.get(Attr.LAUNCH_MODE).equals(tabFolder.getItem(i).getText())) {
+                    tabFolder.setSelection(i);
+                    StructuredSelection selection = new StructuredSelection(configuration);
+                    trees.get(i).getViewer().setSelection(selection, true);
+                }
             }
-        }
         } catch (CoreException e) {
             e.printStackTrace();
         }

@@ -19,7 +19,9 @@ public class GroupLaunchConfigurationDelegate implements ILaunchConfigurationDel
     @Override
     public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor monitor)
             throws CoreException {
-        // TODO Auto-generated method stub
+        for (ItemLaunchConfiguration config : getConfigurations(configuration)) {
+            
+        }
 
     }
 
@@ -28,11 +30,10 @@ public class GroupLaunchConfigurationDelegate implements ILaunchConfigurationDel
         deleteOldConfigurations(configuration);
         List<String> ids = new ArrayList<String>();
         for (int i = 0; i < items.size(); ++i) {
-            Map<Attr, String> config = items.get(i).getConfig();
             String itemId = ItemProps.CONFIG_PREFIX + i;
             ids.add(itemId);
             for (Attr attr : Attr.values()) {
-                configuration.setAttribute(itemId + attr, config.get(attr));
+                configuration.setAttribute(itemId + attr, items.get(i).get(attr));
             }
         }
         configuration.setAttribute(ItemProps.CONFIGURATIONS_MAP, ids);
@@ -72,17 +73,17 @@ public class GroupLaunchConfigurationDelegate implements ILaunchConfigurationDel
         return result;
     }
 
-    public static List<ItemLaunchConfiguration> createItemLaunchConfigurations(
-            List<ILaunchConfiguration> configurations, Map<Attr, String> config, int[] indexes) {
+    public static List<ItemLaunchConfiguration> populateItemLaunchConfigurations(
+            List<ILaunchConfiguration> configurations, ItemLaunchConfiguration config, int[] indexes) {
         List<ItemLaunchConfiguration> result = new ArrayList<ItemLaunchConfiguration>();
         for (int i = 0; i < configurations.size(); i++) {
-            result.add(createItemLaunchConfiguration(configurations.get(i), config, indexes[i]));
+            result.add(populateItemLaunchConfiguration(configurations.get(i), config, indexes[i]));
         }
         return result;
     }
 
-    public static ItemLaunchConfiguration createItemLaunchConfiguration(ILaunchConfiguration launchConfiguration,
-            Map<Attr, String> config, int index) {
+    public static ItemLaunchConfiguration populateItemLaunchConfiguration(ILaunchConfiguration launchConfiguration,
+            ItemLaunchConfiguration config, int index) {
         try {
             Map<Attr, String> curConfig = new HashMap<Attr, String>(config);
             curConfig.put(Attr.NAME, launchConfiguration.getName());

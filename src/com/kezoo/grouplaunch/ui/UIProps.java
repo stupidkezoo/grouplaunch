@@ -10,7 +10,7 @@ public abstract class UIProps {
     private UIProps() {
         
     }
-    //post launch нихуя не работает. нужна проверка на валидность конфигов? 
+    //. нужна проверка на валидность конфигов? еще не предлагает сохранить изменения крыжиков
     //проверка на самозапуск, хз целесообразно ли хуячиться в глубину
     public static final String TAB_NAME = "Group";
     
@@ -21,10 +21,14 @@ public abstract class UIProps {
     
     public static final String ADD_DIALOG_TITLE = "Add dialog u asdasdaqweqweqweqasd";
     public static final String ADD_DIALOG_LABEL = "Add dialog ";
-    public static final String POST_LAUNCH_COMBO = "Additional action";
+    public static final String POST_LAUNCH_COMBO = "Postlaunch action";
+    public static final String POST_LAUNCH_DELAY_COMBO = "Time in seconds";
     
-    public static final String ERROR_EMPTY_CONFIGURATION = "You have to add at least one launch configuration";
-    public static final String ERROR_ALL_INVALID = "You have to add at least one valid launch configuration";
+    public static final String ERROR_EMPTY_CONFIGURATION = "Add at least one launch configuration";
+    public static final String ERROR_ALL_INVALID = "Add at least one valid launch configuration";
+    public static final String ERROR_BLANK_DELAY_FIELD = "Delay seconds field is blank";
+    public static final String ERROR_BAD_DELAY_FIELD = "Delay seconds field contains not number value";
+    public static final String ERROR_DIALOG_NOTHING_SELECTED = "Select at least one launch configuration";
 
     public static enum ButtonType {
         ADD,
