@@ -117,16 +117,16 @@ public class GroupLaunchConfigurationDelegate extends LaunchConfigurationDelegat
 
     public static ItemLaunchConfiguration populateItemLaunchConfiguration(ILaunchConfiguration launchConfiguration,
             ItemLaunchConfiguration config, int index) {
+        ItemLaunchConfiguration curConfig = new ItemLaunchConfiguration(config);
         try {
-            // Map<Attr, String> curConfig = new HashMap<Attr, String>(config);
-            config.put(Attr.NAME, launchConfiguration.getName());
-            config.put(Attr.MEMENTO, launchConfiguration.getMemento());
-            config.put(Attr.ICON_ID, launchConfiguration.getType().getIdentifier());
-            config.put(Attr.GROUP, launchConfiguration.getType().getName());
+            curConfig.put(Attr.NAME, launchConfiguration.getName());
+            curConfig.put(Attr.MEMENTO, launchConfiguration.getMemento());
+            curConfig.put(Attr.ICON_ID, launchConfiguration.getType().getIdentifier());
+            curConfig.put(Attr.GROUP, launchConfiguration.getType().getName());
         } catch (CoreException e) {
             e.printStackTrace();
         }
-        return config;
+        return curConfig;
     }
 
     protected static boolean isGroupConfiguration(ILaunchConfiguration launchConfiguration) {

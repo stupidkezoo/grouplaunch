@@ -93,27 +93,6 @@ public class GroupLaunchConfigurationTab extends AbstractLaunchConfigurationTab
         column3.setText(UIProps.COLUMN_NAME_3);
         column3.setWidth(100);
 
-        int currentWidth = addressTree.computeSize(SWT.DEFAULT, SWT.DEFAULT).x;
-        // comp.addControlListener(new ControlAdapter() {
-        // @Override
-        // public void controlResized(ControlEvent e) {
-        //
-        // int newWidth = addressTree.getSize().x;
-        // if (currentWidth != 0 && newWidth != 0) {
-        // double percent = newWidth / (double) currentWidth;
-        // for (TreeColumn column : addressTree.getColumns()) {
-        // column.setWidth((int) Math.round(column.getWidth() * percent));
-        // }
-        //
-        // }
-        // }
-        // });
-
-        // m_treeViewer.setContentProvider(new AddressContentProvider());
-        // m_treeViewer.setLabelProvider(new TableLabelProvider());
-        // List<City> cities = new ArrayList<City>();
-        // cities.add(new City());
-        // m_treeViewer.setInput(cities);
         treeViewer.expandAll();
         return treeViewer;
     }

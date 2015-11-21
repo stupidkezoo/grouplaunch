@@ -210,6 +210,7 @@ public class GroupLaunchConfigurationDialog extends TitleAreaDialog implements I
                 }
             }
             treeViewer.addFilter(emptyTypeFilter);
+            treeViewer.expandAll();
 
             trees.add(fTree);
             currentSelectedItems.add(null);
