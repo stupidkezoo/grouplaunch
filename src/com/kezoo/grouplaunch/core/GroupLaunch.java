@@ -27,7 +27,6 @@ public class GroupLaunch extends Launch {
     List<ILaunch> children;
     int lastExecutedConfig = -1;
     IProgressMonitor monitor;
-    static Semaphore remoteConfigurationSemaphore = new Semaphore(1);
 
     boolean terminated = false;
     boolean launchedAllChildren = false;
@@ -69,13 +68,6 @@ public class GroupLaunch extends Launch {
     private ILaunch launch(ItemLaunchConfiguration configuration) throws CoreException {
         ILaunchConfiguration innerConfiguration = GroupLaunchConfigurationDelegate
                 .getLaunchConfiguration(configuration);
-        if (isRemote(innerConfiguration)) {
-            try {
-                remoteConfigurationSemaphore.acquire();
-            } catch (InterruptedException e) {
-
-            }
-        }
         return innerConfiguration.launch(configuration.get(Attr.LAUNCH_MODE),
                 new SubProgressMonitor(monitor, 1000 / 5));
 
@@ -116,9 +108,17 @@ public class GroupLaunch extends Launch {
 //
 //    }
     
+    @Override
+    public void terminate() throws DebugException { 
+        terminated = true;
+        super.terminate();
+    }
 
     @Override
     public boolean isTerminated() {
+        if (terminated == true) {
+            return true;
+        }
         if (!launchedAllChildren) {
             return false;
         }
@@ -130,41 +130,11 @@ public class GroupLaunch extends Launch {
         return initialConfig;
     }
 
-    private boolean isRemote(ILaunchConfiguration configuration) {
-        try {
-            return configuration.getType().getIdentifier().equals("org.eclipse.jdt.launching.remoteJavaApplication");
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    @Override
-    public void handleDebugEvents(DebugEvent[] events) {
-        for (int i = 0; i < events.length; i++) {
-            DebugEvent event = events[i];
-            if (event.getKind() == DebugEvent.TERMINATE) {
-                Object object = event.getSource();
-                ILaunch launch = null;
-                if (object instanceof IProcess) {
-                    launch = ((IProcess) object).getLaunch();
-                } else if (object instanceof IDebugTarget) {
-                    launch = ((IDebugTarget) object).getLaunch();
-                }
-                if (this.equals(launch)) {
-                    if (isTerminated()) {
-                        terminated = true;
-                        fireTerminate();
-                        if (isRemote(launch.getLaunchConfiguration())) {
-                            try {
-                                remoteConfigurationSemaphore.release();
-                            } catch (Exception e) {
-
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
+//    private boolean isRemote(ILaunchConfiguration configuration) {
+//        try {
+//            return configuration.getType().getIdentifier().equals("org.eclipse.jdt.launching.remoteJavaApplication");
+//        } catch (Exception e) {
+//            return false;
+//        }
+//    }
 }

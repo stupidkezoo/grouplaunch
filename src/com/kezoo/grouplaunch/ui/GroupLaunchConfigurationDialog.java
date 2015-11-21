@@ -16,12 +16,19 @@ import org.eclipse.debug.internal.ui.launchConfigurations.LaunchConfigurationFil
 import org.eclipse.debug.internal.ui.launchConfigurations.LaunchConfigurationManager;
 import org.eclipse.debug.internal.ui.launchConfigurations.LaunchGroupFilter;
 import org.eclipse.debug.ui.ILaunchGroup;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
+import org.eclipse.jface.viewers.AbstractTreeViewer;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
@@ -55,6 +62,7 @@ import com.kezoo.grouplaunch.core.ItemProps;
 import com.kezoo.grouplaunch.core.ItemProps.Attr;
 import com.kezoo.grouplaunch.core.ItemProps.LaunchMode;
 import com.kezoo.grouplaunch.core.ItemProps.PostLaunchAction;
+import com.kezoo.grouplaunch.ui.UIProps.ButtonType;
 
 public class GroupLaunchConfigurationDialog extends TitleAreaDialog implements ISelectionChangedListener {
 
@@ -131,13 +139,24 @@ public class GroupLaunchConfigurationDialog extends TitleAreaDialog implements I
         // create the top level composite for the dialog area todo
         Composite composite = (Composite) super.createDialogArea(parent);
         setTitle(UIProps.ADD_DIALOG_TITLE);
-        setMessage(UIProps.ADD_DIALOG_LABEL);
+        if (editMode) {
+            setMessage(UIProps.ADD_DIALOG_LABEL_EDIT);
+        } else {
+            setMessage(UIProps.ADD_DIALOG_LABEL_ADD);
+        }
         createTree(composite);
         createCombo(composite);
         if (editMode) {
             selectItem();
         }
         return composite;
+    }
+    
+    @Override
+    protected Control createButtonBar(Composite parent) {
+        Control control = super.createButtonBar(parent);
+        validate();
+        return control;
     }
 
     private void createTree(Composite composite) {
@@ -162,14 +181,36 @@ public class GroupLaunchConfigurationDialog extends TitleAreaDialog implements I
                     SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER, new PatternFilter(),
                     modeToLaunchGroup.get(mode), null);
             fTree.createViewControl();
-            fTree.getViewer().addSelectionChangedListener(this);
-            ViewerFilter[] filters = fTree.getViewer().getFilters();
+            TreeViewer treeViewer = fTree.getViewer();
+            treeViewer.addSelectionChangedListener(this);
+            treeViewer.addDoubleClickListener(new IDoubleClickListener() {
+
+                @Override
+                public void doubleClick(final DoubleClickEvent event) {
+                    final IStructuredSelection selection = (IStructuredSelection) event.getSelection();
+                    if (selection == null || selection.isEmpty()) {
+                        return;
+                    }
+                    final Object sel = selection.getFirstElement();
+                    final ITreeContentProvider provider = (ITreeContentProvider) treeViewer.getContentProvider();
+                    if (!provider.hasChildren(sel) && validate()) {
+                        setOkAndClose();
+                    }
+                    if (treeViewer.getExpandedState(sel)) {
+                        treeViewer.collapseToLevel(sel, AbstractTreeViewer.ALL_LEVELS);
+                    } else {
+                        treeViewer.expandToLevel(sel, 1);
+                    }
+                }
+            });
+            ViewerFilter[] filters = treeViewer.getFilters();
             for (ViewerFilter viewerFilter : filters) {
                 if (viewerFilter instanceof LaunchGroupFilter) {
-                    fTree.getViewer().removeFilter(viewerFilter);
+                    treeViewer.removeFilter(viewerFilter);
                 }
             }
-            fTree.getViewer().addFilter(emptyTypeFilter);
+            treeViewer.addFilter(emptyTypeFilter);
+
             trees.add(fTree);
             currentSelectedItems.add(null);
             tab.setControl(comp);
@@ -233,6 +274,7 @@ public class GroupLaunchConfigurationDialog extends TitleAreaDialog implements I
                         delayText.setVisible(false);
                     }
                 }
+                validate();
             }
 
             @Override
@@ -245,12 +287,16 @@ public class GroupLaunchConfigurationDialog extends TitleAreaDialog implements I
 
     }
 
-    private void validate() {
+    private boolean validate() {
         setErrorMessage(null);
-        if (currentSelectedItems.get(currentTabIndex) == null || currentSelectedItems.get(currentTabIndex).isEmpty()) {
-            setErrorMessage(UIProps.ERROR_DIALOG_NOTHING_SELECTED);
-        }
+        validateSelection();
         validateDelayField();
+        boolean valid = getErrorMessage() == null;
+        Button okButton = getButton(IDialogConstants.OK_ID);
+        if (okButton != null) {
+            okButton.setEnabled(valid);
+        }
+        return valid;
     }
 
     private void validateDelayField() {
@@ -261,6 +307,25 @@ public class GroupLaunchConfigurationDialog extends TitleAreaDialog implements I
                 setErrorMessage(UIProps.ERROR_BLANK_DELAY_FIELD);
             } else if (!delayText.getText().matches("-?\\d+(\\.\\d+)?")) {
                 setErrorMessage(UIProps.ERROR_BAD_DELAY_FIELD);
+            }
+        }
+    }
+
+    private void validateSelection() {
+        ITreeSelection selections = currentSelectedItems.get(currentTabIndex);
+        if (selections == null || selections.isEmpty()) {
+            setErrorMessage(UIProps.ERROR_DIALOG_NOTHING_SELECTED);
+            return;
+        }
+        for (Object selection : selections.toList()) {
+            if (!(selection instanceof ILaunchConfiguration)) {
+                setErrorMessage(UIProps.ERROR_DIALOG_BAD_SELECTED);
+                break;
+            }
+        }
+        if (editMode) {
+            if (selections.size() > 1) {
+                setErrorMessage(UIProps.ERROR_DIALOG_TOO_MANY_SELECTED);
             }
         }
     }
@@ -301,5 +366,10 @@ public class GroupLaunchConfigurationDialog extends TitleAreaDialog implements I
         } catch (CoreException e) {
             e.printStackTrace();
         }
+    }
+
+    private void setOkAndClose() {
+        this.setReturnCode(OK);
+        this.close();
     }
 }

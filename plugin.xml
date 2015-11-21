@@ -7,7 +7,7 @@
    	   id="com.kezoo.grouplaunch.core.GroupLaunchConfigurationType"
 	   name="Group Launch"
 	   delegate="com.kezoo.grouplaunch.core.GroupLaunchConfigurationDelegate"
-	   modes= "run, debug"
+	   modes= "run"
 	   sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
        sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
    </launchConfigurationType>

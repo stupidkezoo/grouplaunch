@@ -120,8 +120,6 @@ public class TreeViewController implements ButtonGroupEventListener {
                         .populateItemLaunchConfigurations(launchConfigurations, addDialog.getConfig(), indexes);
                 configurations.addAll(list);
             }
-            // configurations.add(configurations.size(), new
-            // ItemLaunchConfiguration());
             break;
         }
         case REMOVE: {
@@ -246,7 +244,6 @@ public class TreeViewController implements ButtonGroupEventListener {
         }
 
         @Override
-        @SuppressWarnings("unchecked") // nothing we can do about this
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
             if (newInput instanceof List<?>)
                 configurations = (List<ItemLaunchConfiguration>) newInput;

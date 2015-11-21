@@ -18,8 +18,9 @@ public abstract class UIProps {
     public static final String COLUMN_NAME_2 = "Launch mode";
     public static final String COLUMN_NAME_3 = "Postlaunch action";
     
-    public static final String ADD_DIALOG_TITLE = "Add dialog u asdasdaqweqweqweqasd";
-    public static final String ADD_DIALOG_LABEL = "Add dialog ";
+    public static final String ADD_DIALOG_TITLE = "Create, manage, and run configurations";
+    public static final String ADD_DIALOG_LABEL_ADD = "Add configurations";
+    public static final String ADD_DIALOG_LABEL_EDIT = "Edit configuration";
     public static final String POST_LAUNCH_COMBO = "Postlaunch action";
     public static final String POST_LAUNCH_DELAY_COMBO = "Time in seconds";
     
@@ -28,7 +29,9 @@ public abstract class UIProps {
     public static final String ERROR_BLANK_DELAY_FIELD = "Delay seconds field is blank";
     public static final String ERROR_BAD_DELAY_FIELD = "Delay seconds field contains not number value";
     public static final String ERROR_DIALOG_NOTHING_SELECTED = "Select at least one launch configuration";
-
+    public static final String ERROR_DIALOG_TOO_MANY_SELECTED = "Select only one configuration";
+    public static final String ERROR_DIALOG_BAD_SELECTED = "Configuration type selected, select launch configuration";
+    
     public static final String WARNING_CYCLE_LINKS = "Configuration contains cycle links";
     public static enum ButtonType {
         ADD,
