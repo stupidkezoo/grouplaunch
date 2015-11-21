@@ -52,9 +52,11 @@ public class GroupLaunch extends Launch {
             }
             try {
                 ILaunch child = launch(configurations.get(lastExecutedConfig));
-                children.add(child);
-                addProcesses(child.getProcesses());
-                processPostLaunchAction();
+                if (child != null) {
+                    children.add(child);
+                    addProcesses(child.getProcesses());
+                    processPostLaunchAction();
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -68,8 +70,13 @@ public class GroupLaunch extends Launch {
     private ILaunch launch(ItemLaunchConfiguration configuration) throws CoreException {
         ILaunchConfiguration innerConfiguration = GroupLaunchConfigurationDelegate
                 .getLaunchConfiguration(configuration);
-        return innerConfiguration.launch(configuration.get(Attr.LAUNCH_MODE),
-                new SubProgressMonitor(monitor, 1000 / 5));
+        try {
+            return innerConfiguration.launch(configuration.get(Attr.LAUNCH_MODE),
+                    new SubProgressMonitor(monitor, 1000 / 5));
+        } catch (Exception e) {
+
+        }
+        return null;
 
     }
 
@@ -97,19 +104,20 @@ public class GroupLaunch extends Launch {
             break;
         }
         default:
-        case NONE: 
+        case NONE:
             // nothing
             break;
         }
     }
 
-//    @Override
-//    public void launchConfigurationRemoved(ILaunchConfiguration configuration) {
-//
-//    }
-    
+    // @Override
+    // public void launchConfigurationRemoved(ILaunchConfiguration
+    // configuration) {
+    //
+    // }
+
     @Override
-    public void terminate() throws DebugException { 
+    public void terminate() throws DebugException {
         terminated = true;
         super.terminate();
     }
@@ -130,11 +138,12 @@ public class GroupLaunch extends Launch {
         return initialConfig;
     }
 
-//    private boolean isRemote(ILaunchConfiguration configuration) {
-//        try {
-//            return configuration.getType().getIdentifier().equals("org.eclipse.jdt.launching.remoteJavaApplication");
-//        } catch (Exception e) {
-//            return false;
-//        }
-//    }
+    // private boolean isRemote(ILaunchConfiguration configuration) {
+    // try {
+    // return
+    // configuration.getType().getIdentifier().equals("org.eclipse.jdt.launching.remoteJavaApplication");
+    // } catch (Exception e) {
+    // return false;
+    // }
+    // }
 }
