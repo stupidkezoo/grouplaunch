@@ -4,25 +4,34 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
+import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.core.model.ILaunchConfigurationDelegate;
+import org.eclipse.debug.core.model.ILaunchConfigurationDelegate2;
+import org.eclipse.debug.core.model.LaunchConfigurationDelegate;
+import org.eclipse.debug.internal.ui.DebugUIPlugin;
+import org.eclipse.debug.ui.DebugUITools;
 
 import com.kezoo.grouplaunch.core.ItemProps.Attr;
 
-public class GroupLaunchConfigurationDelegate implements ILaunchConfigurationDelegate {
+public class GroupLaunchConfigurationDelegate extends LaunchConfigurationDelegate
+        implements ILaunchConfigurationDelegate2 {
+
+    protected static ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();
 
     @Override
     public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor monitor)
             throws CoreException {
-        for (ItemLaunchConfiguration config : getConfigurations(configuration)) {
-            
-        }
-
+        ((GroupLaunch) launch).setMonitor(monitor);
+        ((GroupLaunch) launch).launch();
     }
 
     public static void storeConfiguration(ILaunchConfigurationWorkingCopy configuration,
@@ -73,6 +82,16 @@ public class GroupLaunchConfigurationDelegate implements ILaunchConfigurationDel
         return result;
     }
 
+    public static ILaunchConfiguration getLaunchConfiguration(ItemLaunchConfiguration itemConfiguration)
+            throws CoreException {
+        return getLaunchConfiguration(itemConfiguration.get(Attr.MEMENTO));
+    }
+
+    public static ILaunchConfiguration getLaunchConfiguration(String memento) throws CoreException {
+        return manager.getLaunchConfiguration(memento);
+
+    }
+
     public static List<ItemLaunchConfiguration> populateItemLaunchConfigurations(
             List<ILaunchConfiguration> configurations, ItemLaunchConfiguration config, int[] indexes) {
         List<ItemLaunchConfiguration> result = new ArrayList<ItemLaunchConfiguration>();
@@ -85,16 +104,65 @@ public class GroupLaunchConfigurationDelegate implements ILaunchConfigurationDel
     public static ItemLaunchConfiguration populateItemLaunchConfiguration(ILaunchConfiguration launchConfiguration,
             ItemLaunchConfiguration config, int index) {
         try {
-            Map<Attr, String> curConfig = new HashMap<Attr, String>(config);
-            curConfig.put(Attr.NAME, launchConfiguration.getName());
-            curConfig.put(Attr.MEMENTO, launchConfiguration.getMemento());
-            curConfig.put(Attr.ICON_ID, launchConfiguration.getType().getIdentifier());
-            curConfig.put(Attr.GROUP, launchConfiguration.getType().getName());
-            return new ItemLaunchConfiguration(curConfig);
+            // Map<Attr, String> curConfig = new HashMap<Attr, String>(config);
+            config.put(Attr.NAME, launchConfiguration.getName());
+            config.put(Attr.MEMENTO, launchConfiguration.getMemento());
+            config.put(Attr.ICON_ID, launchConfiguration.getType().getIdentifier());
+            config.put(Attr.GROUP, launchConfiguration.getType().getName());
         } catch (CoreException e) {
             e.printStackTrace();
-            return null;
         }
+        return config;
+    }
+
+    protected static boolean isGroupConfiguration(ILaunchConfiguration launchConfiguration) {
+        try {
+            return !launchConfiguration.getAttribute(ItemProps.CONFIGURATIONS_MAP, new ArrayList<String>()).isEmpty();
+        } catch (CoreException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public ILaunch getLaunch(ILaunchConfiguration configuration, String mode) throws CoreException {
+        // TODO Auto-generated method stub
+        return new GroupLaunch(configuration);
+    }
+
+    @Override
+    public boolean buildForLaunch(ILaunchConfiguration configuration, String mode, IProgressMonitor monitor)
+            throws CoreException {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    public static boolean detectOverflow(ILaunchConfiguration configuration) {
+        Stack<String> visited = new Stack<>();
+        try {
+            return gotCycle(visited, configuration);
+        } catch (Exception e) {
+            return false;
+        }
+
+    }
+
+    private static boolean gotCycle(Stack<String> visited, ILaunchConfiguration configuration) throws Exception {
+        String id = configuration.getMemento();
+        if (visited.contains(id)) {
+            return true;
+        }
+        if (isGroupConfiguration(configuration)) {
+            visited.push(id);
+            for (ItemLaunchConfiguration config : getConfigurations(configuration)) {
+                if (Boolean.parseBoolean(config.get(Attr.ENABLED))
+                        && gotCycle(visited, getLaunchConfiguration(config)) == true) {
+                    return true;
+                }
+            }
+            visited.pop();
+        }
+        return false;
     }
 
 }

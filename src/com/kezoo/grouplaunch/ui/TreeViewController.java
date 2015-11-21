@@ -64,14 +64,15 @@ public class TreeViewController implements ButtonGroupEventListener {
             @Override
             public void checkStateChanged(CheckStateChangedEvent event) {
                 ((ItemLaunchConfiguration) event.getElement()).put(Attr.ENABLED, event.getChecked() + "");
-                treeViewer.refresh();
+                refresh();
             }
         });
         treeViewer.setCheckStateProvider(new ICheckStateProvider() {
 
             @Override
             public boolean isChecked(Object element) {
-                return Boolean.parseBoolean(((ItemLaunchConfiguration) element).get(Attr.ENABLED));
+                boolean a = Boolean.parseBoolean(((ItemLaunchConfiguration) element).get(Attr.ENABLED).trim());
+                return a;
             }
 
             @Override
@@ -174,7 +175,7 @@ public class TreeViewController implements ButtonGroupEventListener {
             return -1;
         }
     }
-    
+
     private void notifyOnChange() {
         for (TreeViewerEventListener listener : listeners) {
             listener.onChange();
@@ -275,7 +276,12 @@ public class TreeViewController implements ButtonGroupEventListener {
             case 2:
                 return config.get(Attr.LAUNCH_MODE);
             case 3:
-                return ItemProps.getPostLaunchName(PostLaunchAction.valueOf(config.get(Attr.POST_LAUNCH_ACTION)));
+                String columnText = ItemProps
+                        .getPostLaunchName(PostLaunchAction.valueOf(config.get(Attr.POST_LAUNCH_ACTION)));
+                if (config.get(Attr.POST_LAUNCH_ACTION).equals(PostLaunchAction.DELAY)) {
+                    columnText += " " + config.get(Attr.DELAY) + " seconds";
+                }
+                return columnText;
             default:
                 return "";
             }

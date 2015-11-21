@@ -119,6 +119,7 @@ public class GroupLaunchConfigurationDialog extends TitleAreaDialog implements I
     }
 
     private void initDefaultConfig() {
+        currentConfig = new ItemLaunchConfiguration();
         currentConfig.put(Attr.LAUNCH_MODE, ItemProps.DEFAULT_LAUNCH_MODE.toString());
         currentConfig.put(Attr.POST_LAUNCH_ACTION, ItemProps.DEFAULT_POST_LAUNCH_ACTION.toString());
         currentConfig.put(Attr.ENABLED, true + "");

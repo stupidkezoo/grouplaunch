@@ -147,6 +147,10 @@ public class GroupLaunchConfigurationTab extends AbstractLaunchConfigurationTab
 
     @Override
     public boolean isValid(ILaunchConfiguration launchConfig) {
+        setErrorMessage(null);
+        if (GroupLaunchConfigurationDelegate.detectOverflow(launchConfig)) {
+            setErrorMessage(UIProps.WARNING_CYCLE_LINKS);
+        }
         if (configurations.isEmpty()) {
             setErrorMessage(UIProps.ERROR_EMPTY_CONFIGURATION);
             return false;
@@ -158,7 +162,6 @@ public class GroupLaunchConfigurationTab extends AbstractLaunchConfigurationTab
                         .getLaunchConfiguration(config.get(Attr.MEMENTO));
                 if (true == DebugUIPlugin.doLaunchConfigurationFiltering(configuration)
                         && !WorkbenchActivityHelper.filterItem(configuration)) {
-                    setErrorMessage(null);
                     return true;
                 }
             } catch (CoreException e) {

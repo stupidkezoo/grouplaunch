@@ -30,6 +30,7 @@ public abstract class UIProps {
     public static final String ERROR_BAD_DELAY_FIELD = "Delay seconds field contains not number value";
     public static final String ERROR_DIALOG_NOTHING_SELECTED = "Select at least one launch configuration";
 
+    public static final String WARNING_CYCLE_LINKS = "Configuration contains cycle links";
     public static enum ButtonType {
         ADD,
         EDIT,
