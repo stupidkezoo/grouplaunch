@@ -65,7 +65,9 @@ public class TreeViewController implements ButtonGroupEventListener {
         treeViewer.addCheckStateListener(new ICheckStateListener() {
             @Override
             public void checkStateChanged(CheckStateChangedEvent event) {
-                ((ItemLaunchConfiguration) event.getElement()).put(Attr.ENABLED, event.getChecked() + "");
+                if (!elementInvalid((ItemLaunchConfiguration) event.getElement())) {
+                    ((ItemLaunchConfiguration) event.getElement()).put(Attr.ENABLED, event.getChecked() + "");
+                }
                 refresh();
             }
         });
@@ -73,13 +75,18 @@ public class TreeViewController implements ButtonGroupEventListener {
 
             @Override
             public boolean isChecked(Object element) {
-                boolean a = Boolean.parseBoolean(((ItemLaunchConfiguration) element).get(Attr.ENABLED).trim());
-                return a;
+                if (elementInvalid(element)) {
+                    return false;
+                }
+                return Boolean.parseBoolean(((ItemLaunchConfiguration) element).get(Attr.ENABLED).trim());
             }
 
             @Override
             public boolean isGrayed(Object element) {
-                return false;// TODO Auto-generated method stub
+                if (((ItemLaunchConfiguration) element).containsKey(Attr.INVALID)) {
+                    return Boolean.parseBoolean(((ItemLaunchConfiguration) element).get(Attr.INVALID).trim());
+                }
+                return false;
             }
 
         });
@@ -93,13 +100,21 @@ public class TreeViewController implements ButtonGroupEventListener {
 
         });
         treeViewer.addDoubleClickListener(new IDoubleClickListener() {
-            
+
             @Override
-            public void doubleClick(final DoubleClickEvent event)
-            {
+            public void doubleClick(final DoubleClickEvent event) {
                 onButtonPressed(ButtonType.EDIT);
             }
         });
+    }
+    
+    private boolean elementInvalid(Object element) {
+        if (((ItemLaunchConfiguration) element).containsKey(Attr.INVALID)) {
+            return Boolean.parseBoolean(((ItemLaunchConfiguration) element).get(Attr.INVALID).trim());
+        } else {
+            return false;
+        }
+            
     }
 
     @Override
@@ -165,6 +180,10 @@ public class TreeViewController implements ButtonGroupEventListener {
         treeViewer.refresh();
         updateButtonsState();
         notifyOnChange();
+    }
+    
+    public void refreshOnlyView() {
+        treeViewer.refresh();
     }
 
     private List<Integer> getMultiSelectedIndex() {

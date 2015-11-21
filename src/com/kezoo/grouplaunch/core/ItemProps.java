@@ -22,7 +22,8 @@ public class ItemProps {
         MEMENTO,
         ICON_ID,
         GROUP,
-        DELAY
+        DELAY,
+        INVALID
     }
     
     public static enum LaunchMode {

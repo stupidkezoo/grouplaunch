@@ -56,10 +56,10 @@ public class GroupLaunchConfigurationTab extends AbstractLaunchConfigurationTab
         setControl(comp);
         comp.setLayout(new GridLayout());
         buttonGroupController = new ButtonGroupController(comp);
-        treeViewController = new TreeViewController(createTreeViewComponent(comp));      
+        treeViewController = new TreeViewController(createTreeViewComponent(comp));
         buttonGroupController.addListener(this);
         buttonGroupController.addListener(treeViewController);
-        treeViewController.setContent(configurations);  
+        treeViewController.setContent(configurations);
         treeViewController.addListener(this);
         treeViewController.addListener(buttonGroupController);
         setErrorMessage(null);
@@ -156,24 +156,31 @@ public class GroupLaunchConfigurationTab extends AbstractLaunchConfigurationTab
             return false;
         }
         ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();
+        boolean hasValidCofiguration = false;
         for (ItemLaunchConfiguration config : configurations) {
             try {
-                
-                
-                ILaunchConfiguration configuration = manager
-                        .getLaunchConfiguration(config.get(Attr.MEMENTO));
-                if (true == DebugUIPlugin.doLaunchConfigurationFiltering(configuration)
-                        && !WorkbenchActivityHelper.filterItem(configuration)) {
-                    return true;
+
+                ILaunchConfiguration configuration = manager.getLaunchConfiguration(config.get(Attr.MEMENTO));
+                boolean valid = DebugUIPlugin.doLaunchConfigurationFiltering(configuration)
+                        && !WorkbenchActivityHelper.filterItem(configuration);
+                if (valid) {
+                    config.put(Attr.INVALID, false + "");
+                    hasValidCofiguration = true;
+                } else {
+                    config.put(Attr.ENABLED, false + "");
+                    config.put(Attr.INVALID, true + "");
                 }
-                
-                
+                treeViewController.refreshOnlyView();
             } catch (CoreException e) {
                 e.printStackTrace();
             }
         }
-        setErrorMessage(UIProps.ERROR_ALL_INVALID);
-        return false;
+        if (!hasValidCofiguration) {
+            setErrorMessage(UIProps.ERROR_ALL_INVALID);
+            return false;
+        } else {
+            return true;
+        }
     }
 
     @Override
