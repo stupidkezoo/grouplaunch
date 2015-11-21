@@ -10,8 +10,7 @@ public abstract class UIProps {
     private UIProps() {
         
     }
-    //. нужна проверка на валидность конфигов? еще не предлагает сохранить изменения крыжиков
-    //проверка на самозапуск, хз целесообразно ли хуячиться в глубину
+    //. нужна проверка на валидность конфигов?
     public static final String TAB_NAME = "Group";
     
     public static final String COLUMN_NAME_0 = "Type";

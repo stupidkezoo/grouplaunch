@@ -158,12 +158,16 @@ public class GroupLaunchConfigurationTab extends AbstractLaunchConfigurationTab
         ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();
         for (ItemLaunchConfiguration config : configurations) {
             try {
+                
+                
                 ILaunchConfiguration configuration = manager
                         .getLaunchConfiguration(config.get(Attr.MEMENTO));
                 if (true == DebugUIPlugin.doLaunchConfigurationFiltering(configuration)
                         && !WorkbenchActivityHelper.filterItem(configuration)) {
                     return true;
                 }
+                
+                
             } catch (CoreException e) {
                 e.printStackTrace();
             }

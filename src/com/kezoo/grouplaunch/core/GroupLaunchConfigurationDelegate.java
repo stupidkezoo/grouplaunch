@@ -19,6 +19,8 @@ import org.eclipse.debug.core.model.ILaunchConfigurationDelegate2;
 import org.eclipse.debug.core.model.LaunchConfigurationDelegate;
 import org.eclipse.debug.internal.ui.DebugUIPlugin;
 import org.eclipse.debug.ui.DebugUITools;
+import org.eclipse.debug.ui.IDebugUIConstants;
+import org.eclipse.jface.preference.IPreferenceStore;
 
 import com.kezoo.grouplaunch.core.ItemProps.Attr;
 
@@ -30,8 +32,20 @@ public class GroupLaunchConfigurationDelegate extends LaunchConfigurationDelegat
     @Override
     public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor monitor)
             throws CoreException {
+        
+        // saving old launches when new launch with same type launches
+        IPreferenceStore preferenceStore = DebugUIPlugin.getDefault().getPreferenceStore();
+        boolean dstore = preferenceStore.getBoolean(IDebugUIConstants.PREF_AUTO_REMOVE_OLD_LAUNCHES);
+        preferenceStore.setValue(IDebugUIConstants.PREF_AUTO_REMOVE_OLD_LAUNCHES, false);
+        try {
         ((GroupLaunch) launch).setMonitor(monitor);
         ((GroupLaunch) launch).launch();
+        } catch (Throwable e) {
+            e.printStackTrace();
+        } finally {
+            preferenceStore.setValue(IDebugUIConstants.PREF_AUTO_REMOVE_OLD_LAUNCHES, dstore);
+            monitor.done();
+        }
     }
 
     public static void storeConfiguration(ILaunchConfigurationWorkingCopy configuration,

@@ -12,8 +12,10 @@ import org.eclipse.debug.internal.ui.DebugPluginImages;
 import org.eclipse.jface.viewers.BaseLabelProvider;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
+import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.ICheckStateProvider;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
@@ -90,6 +92,14 @@ public class TreeViewController implements ButtonGroupEventListener {
             }
 
         });
+        treeViewer.addDoubleClickListener(new IDoubleClickListener() {
+            
+            @Override
+            public void doubleClick(final DoubleClickEvent event)
+            {
+                onButtonPressed(ButtonType.EDIT);
+            }
+        });
     }
 
     @Override
@@ -123,6 +133,9 @@ public class TreeViewController implements ButtonGroupEventListener {
         }
         case EDIT: {
             int index = getSingleSelectedIndex();
+            if (index == -1) {
+                return;
+            }
             GroupLaunchConfigurationDialog editDialog = new GroupLaunchConfigurationDialog(
                     treeViewer.getControl().getShell(), configurations.get(index));
             if (Window.OK == editDialog.open()) {
@@ -219,7 +232,7 @@ public class TreeViewController implements ButtonGroupEventListener {
         }
     }
 
-    static class ContentProvider implements IStructuredContentProvider, ITreeContentProvider {
+    private static class ContentProvider implements IStructuredContentProvider, ITreeContentProvider {
         protected List<ItemLaunchConfiguration> configurations;
 
         @Override
@@ -255,7 +268,7 @@ public class TreeViewController implements ButtonGroupEventListener {
         }
     }
 
-    static class LabelProvider extends BaseLabelProvider implements ITableLabelProvider {
+    private static class LabelProvider extends BaseLabelProvider implements ITableLabelProvider {
         @Override
         public Image getColumnImage(Object element, int columnIndex) {
             if (columnIndex == 0) {

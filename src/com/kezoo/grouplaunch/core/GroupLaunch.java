@@ -30,6 +30,7 @@ public class GroupLaunch extends Launch {
     static Semaphore remoteConfigurationSemaphore = new Semaphore(1);
 
     boolean terminated = false;
+    boolean launchedAllChildren = false;
 
     public GroupLaunch(ILaunchConfiguration launchConfiguration) {
         super(launchConfiguration, "run", null);
@@ -60,6 +61,7 @@ public class GroupLaunch extends Launch {
             }
 
         }
+        launchedAllChildren = true;
         // end task
         // if !terminate
     }
@@ -109,35 +111,18 @@ public class GroupLaunch extends Launch {
         }
     }
 
-    @Override
-    public void launchConfigurationRemoved(ILaunchConfiguration configuration) {
-
-    }
-
-    @Override
-    public boolean canTerminate() {
-        for (ILaunch child : children) {
-            if (child.canTerminate() == false) {
-                return false;
-            }
-        }
-        return true;
-    }
+//    @Override
+//    public void launchConfigurationRemoved(ILaunchConfiguration configuration) {
+//
+//    }
+    
 
     @Override
     public boolean isTerminated() {
-        if (terminated == true) {
-            return true;
-        }
-        if (children.size() == 0) {
+        if (!launchedAllChildren) {
             return false;
         }
-        for (ILaunch child : children) {
-            if (child.isTerminated() == false) {
-                return false;
-            }
-        }
-        return true;
+        return super.isTerminated();
     }
 
     @Override
@@ -167,6 +152,7 @@ public class GroupLaunch extends Launch {
                 }
                 if (this.equals(launch)) {
                     if (isTerminated()) {
+                        terminated = true;
                         fireTerminate();
                         if (isRemote(launch.getLaunchConfiguration())) {
                             try {

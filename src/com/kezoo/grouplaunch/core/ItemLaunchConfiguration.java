@@ -31,12 +31,6 @@ public class ItemLaunchConfiguration extends HashMap<Attr, String>{
     
     @Override
     public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        return id.equals(((ItemLaunchConfiguration)obj).getId()) && super.equals(obj);
+        return super.equals(obj) && id.equals(((ItemLaunchConfiguration)obj).getId()) ;
     }
 }
