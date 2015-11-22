@@ -37,7 +37,7 @@ public class GroupLaunchConfigurationDelegate extends LaunchConfigurationDelegat
         boolean dstore = preferenceStore.getBoolean(IDebugUIConstants.PREF_AUTO_REMOVE_OLD_LAUNCHES);
         preferenceStore.setValue(IDebugUIConstants.PREF_AUTO_REMOVE_OLD_LAUNCHES, false);
         try {
-            monitor.beginTask("kokoko", 1000);
+            monitor.beginTask("Launching " + configuration.getName(), 1000);
             if (detectOverflow(configuration)) {
                 PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
                     public void run() {
@@ -179,7 +179,7 @@ public class GroupLaunchConfigurationDelegate extends LaunchConfigurationDelegat
         if (isGroupConfiguration(configuration)) {
             visited.push(id);
             for (LaunchConfigurationWrapper config : getConfigurations(configuration)) {
-                if (Boolean.parseBoolean(config.get(Attr.ENABLED))
+                if (Boolean.parseBoolean(config.get(Attr.ENABLED).trim())
                         && gotCycle(visited, getLaunchConfiguration(config)) == true) {
                     return true;
                 }
