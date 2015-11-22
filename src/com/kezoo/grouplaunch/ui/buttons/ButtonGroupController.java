@@ -1,4 +1,4 @@
-package com.kezoo.grouplaunch.ui;
+package com.kezoo.grouplaunch.ui.buttons;
 
 import java.net.URL;
 import java.util.HashMap;
@@ -11,14 +11,13 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.layout.RowLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 
+import com.kezoo.grouplaunch.ui.UIProps;
 import com.kezoo.grouplaunch.ui.UIProps.ButtonType;
+import com.kezoo.grouplaunch.ui.tree.TreeViewerEventListener;
 
 public class ButtonGroupController implements TreeViewerEventListener {
 
@@ -27,7 +26,7 @@ public class ButtonGroupController implements TreeViewerEventListener {
     private Map<ButtonType, ToolItem> buttons = new HashMap<ButtonType, ToolItem>();
 
     public ButtonGroupController(Composite comp) {
-        
+
         initButtons(comp);
     }
 
@@ -50,7 +49,7 @@ public class ButtonGroupController implements TreeViewerEventListener {
             public void widgetDefaultSelected(SelectionEvent e) {
             };
         };
-        
+
         ToolBar toolBar = new ToolBar(comp, SWT.FLAT | SWT.WRAP | SWT.LEFT);
         for (ButtonType buttonType : UIProps.ButtonType.values()) {
             ToolItem button = new ToolItem(toolBar, SWT.PUSH);

@@ -1,7 +1,6 @@
 package com.kezoo.grouplaunch.ui;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +20,6 @@ import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.viewers.AbstractTreeViewer;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
-import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
@@ -32,24 +30,17 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Dialog;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TabFolder;
@@ -57,16 +48,14 @@ import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PatternFilter;
 
-import com.kezoo.grouplaunch.core.ItemLaunchConfiguration;
-import com.kezoo.grouplaunch.core.ItemProps;
-import com.kezoo.grouplaunch.core.ItemProps.Attr;
-import com.kezoo.grouplaunch.core.ItemProps.LaunchMode;
-import com.kezoo.grouplaunch.core.ItemProps.PostLaunchAction;
-import com.kezoo.grouplaunch.ui.UIProps.ButtonType;
+import com.kezoo.grouplaunch.core.LaunchConfigurationWrapper;
+import com.kezoo.grouplaunch.core.LaunchProps;
+import com.kezoo.grouplaunch.core.LaunchProps.Attr;
+import com.kezoo.grouplaunch.core.LaunchProps.PostLaunchAction;
 
 public class GroupLaunchConfigurationDialog extends TitleAreaDialog implements ISelectionChangedListener {
 
-    private ItemLaunchConfiguration currentConfig;
+    private LaunchConfigurationWrapper currentConfig;
     private Map<String, ILaunchGroup> modeToLaunchGroup = new HashMap<String, ILaunchGroup>();
     private List<String> modes = new ArrayList<String>();
     private int currentTabIndex;
@@ -80,7 +69,7 @@ public class GroupLaunchConfigurationDialog extends TitleAreaDialog implements I
     private Combo postLaunchCombo;
     private Text delayText;
 
-    public GroupLaunchConfigurationDialog(Shell parent, ItemLaunchConfiguration initialConfig) {
+    public GroupLaunchConfigurationDialog(Shell parent, LaunchConfigurationWrapper initialConfig) {
         super(parent);
         editMode = true;
         currentConfig = initialConfig;
@@ -127,9 +116,9 @@ public class GroupLaunchConfigurationDialog extends TitleAreaDialog implements I
     }
 
     private void initDefaultConfig() {
-        currentConfig = new ItemLaunchConfiguration();
-        currentConfig.put(Attr.LAUNCH_MODE, ItemProps.DEFAULT_LAUNCH_MODE.toString());
-        currentConfig.put(Attr.POST_LAUNCH_ACTION, ItemProps.DEFAULT_POST_LAUNCH_ACTION.toString());
+        currentConfig = new LaunchConfigurationWrapper();
+        currentConfig.put(Attr.LAUNCH_MODE, LaunchProps.DEFAULT_LAUNCH_MODE.toString());
+        currentConfig.put(Attr.POST_LAUNCH_ACTION, LaunchProps.DEFAULT_POST_LAUNCH_ACTION.toString());
         currentConfig.put(Attr.ENABLED, true + "");
 
     }
@@ -151,7 +140,7 @@ public class GroupLaunchConfigurationDialog extends TitleAreaDialog implements I
         }
         return composite;
     }
-    
+
     @Override
     protected Control createButtonBar(Composite parent) {
         Control control = super.createButtonBar(parent);
@@ -233,9 +222,10 @@ public class GroupLaunchConfigurationDialog extends TitleAreaDialog implements I
         new Label(comp, SWT.NULL).setText(UIProps.POST_LAUNCH_COMBO);
         postLaunchCombo = new Combo(comp, SWT.READ_ONLY);
         postLaunchCombo.setBounds(50, 50, 150, 65);
-        postLaunchCombo.setItems(ItemProps.getPostLaunchNameArray());
+        postLaunchCombo.setItems(LaunchProps.getPostLaunchNameArray());
         postLaunchCombo.select(postLaunchCombo.indexOf(
-                ItemProps.getPostLaunchName(PostLaunchAction.valueOf(currentConfig.get(Attr.POST_LAUNCH_ACTION))), 0));
+                LaunchProps.getPostLaunchName(PostLaunchAction.valueOf(currentConfig.get(Attr.POST_LAUNCH_ACTION))),
+                0));
 
         Label delayLabel = new Label(comp, SWT.NULL);
         delayLabel.setText(UIProps.POST_LAUNCH_DELAY_COMBO);
@@ -266,8 +256,8 @@ public class GroupLaunchConfigurationDialog extends TitleAreaDialog implements I
                 int index = postLaunchCombo.getSelectionIndex();
                 if (index != -1) {
                     currentConfig.put(Attr.POST_LAUNCH_ACTION,
-                            ItemProps.getPostLaunchEnum(postLaunchCombo.getItem(index)).toString());
-                    if (postLaunchCombo.getItem(index).equals(ItemProps.getPostLaunchName(PostLaunchAction.DELAY))) {
+                            LaunchProps.getPostLaunchEnum(postLaunchCombo.getItem(index)).toString());
+                    if (postLaunchCombo.getItem(index).equals(LaunchProps.getPostLaunchName(PostLaunchAction.DELAY))) {
                         delayLabel.setVisible(true);
                         delayText.setVisible(true);
                     } else {
@@ -303,7 +293,7 @@ public class GroupLaunchConfigurationDialog extends TitleAreaDialog implements I
     private void validateDelayField() {
         // selected delay action
         if (postLaunchCombo.getItem((postLaunchCombo.getSelectionIndex()))
-                .equals(ItemProps.getPostLaunchName(PostLaunchAction.DELAY))) {
+                .equals(LaunchProps.getPostLaunchName(PostLaunchAction.DELAY))) {
             if (delayText.getText() == null || delayText.getText().trim().equals("")) {
                 setErrorMessage(UIProps.ERROR_BLANK_DELAY_FIELD);
             } else if (!delayText.getText().matches("-?\\d+(\\.\\d+)?")) {
@@ -350,7 +340,7 @@ public class GroupLaunchConfigurationDialog extends TitleAreaDialog implements I
         return result;
     }
 
-    public ItemLaunchConfiguration getConfig() {
+    public LaunchConfigurationWrapper getConfig() {
         return currentConfig;
     }
 

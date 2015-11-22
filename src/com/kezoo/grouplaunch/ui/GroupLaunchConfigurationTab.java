@@ -9,46 +9,31 @@ import org.eclipse.debug.core.ILaunchConfiguration;
 
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.core.ILaunchManager;
-import org.eclipse.debug.internal.core.LaunchManager;
 import org.eclipse.debug.internal.ui.DebugUIPlugin;
-import org.eclipse.debug.internal.ui.SWTFactory;
-import org.eclipse.debug.internal.ui.launchConfigurations.LaunchConfigurationsMessages;
 import org.eclipse.debug.ui.AbstractLaunchConfigurationTab;
-import org.eclipse.jface.viewers.BaseLabelProvider;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
-import org.eclipse.jface.viewers.IStructuredContentProvider;
-import org.eclipse.jface.viewers.ITableLabelProvider;
-import org.eclipse.jface.viewers.ITreeContentProvider;
-import org.eclipse.jface.viewers.TreeViewer;
-import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ControlAdapter;
-import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.RowLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.activities.WorkbenchActivityHelper;
 
 import com.kezoo.grouplaunch.core.*;
-import com.kezoo.grouplaunch.core.ItemProps.Attr;
+import com.kezoo.grouplaunch.core.LaunchProps.Attr;
 import com.kezoo.grouplaunch.ui.UIProps.ButtonType;
+import com.kezoo.grouplaunch.ui.buttons.ButtonGroupController;
+import com.kezoo.grouplaunch.ui.buttons.ButtonGroupEventListener;
+import com.kezoo.grouplaunch.ui.tree.TreeViewController;
+import com.kezoo.grouplaunch.ui.tree.TreeViewerEventListener;
 
 public class GroupLaunchConfigurationTab extends AbstractLaunchConfigurationTab
         implements ButtonGroupEventListener, TreeViewerEventListener {
 
     private ButtonGroupController buttonGroupController;
     private TreeViewController treeViewController;
-    private List<ItemLaunchConfiguration> configurations = new ArrayList<ItemLaunchConfiguration>();
+    private List<LaunchConfigurationWrapper> configurations = new ArrayList<LaunchConfigurationWrapper>();
 
     @Override
     public void createControl(Composite parent) {
@@ -129,6 +114,7 @@ public class GroupLaunchConfigurationTab extends AbstractLaunchConfigurationTab
         setErrorMessage(null);
         if (GroupLaunchConfigurationDelegate.detectOverflow(launchConfig)) {
             setErrorMessage(UIProps.WARNING_CYCLE_LINKS);
+            return false;
         }
         if (configurations.isEmpty()) {
             setErrorMessage(UIProps.ERROR_EMPTY_CONFIGURATION);
@@ -136,7 +122,7 @@ public class GroupLaunchConfigurationTab extends AbstractLaunchConfigurationTab
         }
         ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();
         boolean hasValidCofiguration = false;
-        for (ItemLaunchConfiguration config : configurations) {
+        for (LaunchConfigurationWrapper config : configurations) {
             try {
 
                 ILaunchConfiguration configuration = manager.getLaunchConfiguration(config.get(Attr.MEMENTO));

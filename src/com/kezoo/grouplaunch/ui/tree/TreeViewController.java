@@ -1,12 +1,10 @@
-package com.kezoo.grouplaunch.ui;
+package com.kezoo.grouplaunch.ui.tree;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
-import org.eclipse.cdt.launch.internal.MultiLaunchConfigurationDelegate;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.internal.ui.DebugPluginImages;
 import org.eclipse.jface.viewers.BaseLabelProvider;
@@ -21,26 +19,24 @@ import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.window.Window;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.TreeItem;
 
 import com.kezoo.grouplaunch.core.GroupLaunchConfigurationDelegate;
-import com.kezoo.grouplaunch.core.ItemLaunchConfiguration;
-import com.kezoo.grouplaunch.core.ItemProps;
-import com.kezoo.grouplaunch.core.ItemProps.Attr;
-import com.kezoo.grouplaunch.core.ItemProps.PostLaunchAction;
+import com.kezoo.grouplaunch.core.LaunchConfigurationWrapper;
+import com.kezoo.grouplaunch.core.LaunchProps;
+import com.kezoo.grouplaunch.core.LaunchProps.Attr;
+import com.kezoo.grouplaunch.core.LaunchProps.PostLaunchAction;
+import com.kezoo.grouplaunch.ui.GroupLaunchConfigurationDialog;
 import com.kezoo.grouplaunch.ui.UIProps.ButtonType;
+import com.kezoo.grouplaunch.ui.buttons.ButtonGroupEventListener;
 
 public class TreeViewController implements ButtonGroupEventListener {
 
     private CheckboxTreeViewer treeViewer;
-    protected List<ItemLaunchConfiguration> configurations;
+    protected List<LaunchConfigurationWrapper> configurations;
     private List<TreeViewerEventListener> listeners = new LinkedList<TreeViewerEventListener>();
 
     public TreeViewController(CheckboxTreeViewer treeViewer) {
@@ -54,7 +50,7 @@ public class TreeViewController implements ButtonGroupEventListener {
         }
     }
 
-    public void setContent(List<ItemLaunchConfiguration> configurations) {
+    public void setContent(List<LaunchConfigurationWrapper> configurations) {
         this.configurations = configurations;
         treeViewer.setInput(configurations);
     }
@@ -65,8 +61,8 @@ public class TreeViewController implements ButtonGroupEventListener {
         treeViewer.addCheckStateListener(new ICheckStateListener() {
             @Override
             public void checkStateChanged(CheckStateChangedEvent event) {
-                if (!elementInvalid((ItemLaunchConfiguration) event.getElement())) {
-                    ((ItemLaunchConfiguration) event.getElement()).put(Attr.ENABLED, event.getChecked() + "");
+                if (!elementInvalid((LaunchConfigurationWrapper) event.getElement())) {
+                    ((LaunchConfigurationWrapper) event.getElement()).put(Attr.ENABLED, event.getChecked() + "");
                 }
                 refresh();
             }
@@ -78,13 +74,13 @@ public class TreeViewController implements ButtonGroupEventListener {
                 if (elementInvalid(element)) {
                     return false;
                 }
-                return Boolean.parseBoolean(((ItemLaunchConfiguration) element).get(Attr.ENABLED).trim());
+                return Boolean.parseBoolean(((LaunchConfigurationWrapper) element).get(Attr.ENABLED).trim());
             }
 
             @Override
             public boolean isGrayed(Object element) {
-                if (((ItemLaunchConfiguration) element).containsKey(Attr.INVALID)) {
-                    return Boolean.parseBoolean(((ItemLaunchConfiguration) element).get(Attr.INVALID).trim());
+                if (((LaunchConfigurationWrapper) element).containsKey(Attr.INVALID)) {
+                    return Boolean.parseBoolean(((LaunchConfigurationWrapper) element).get(Attr.INVALID).trim());
                 }
                 return false;
             }
@@ -107,14 +103,14 @@ public class TreeViewController implements ButtonGroupEventListener {
             }
         });
     }
-    
+
     private boolean elementInvalid(Object element) {
-        if (((ItemLaunchConfiguration) element).containsKey(Attr.INVALID)) {
-            return Boolean.parseBoolean(((ItemLaunchConfiguration) element).get(Attr.INVALID).trim());
+        if (((LaunchConfigurationWrapper) element).containsKey(Attr.INVALID)) {
+            return Boolean.parseBoolean(((LaunchConfigurationWrapper) element).get(Attr.INVALID).trim());
         } else {
             return false;
         }
-            
+
     }
 
     @Override
@@ -131,7 +127,7 @@ public class TreeViewController implements ButtonGroupEventListener {
                 for (int i = 0; i < launchConfigurations.size(); ++i) {
                     indexes[i] = addIndex++;
                 }
-                List<ItemLaunchConfiguration> list = GroupLaunchConfigurationDelegate
+                List<LaunchConfigurationWrapper> list = GroupLaunchConfigurationDelegate
                         .populateItemLaunchConfigurations(launchConfigurations, addDialog.getConfig(), indexes);
                 configurations.addAll(list);
             }
@@ -181,7 +177,7 @@ public class TreeViewController implements ButtonGroupEventListener {
         updateButtonsState();
         notifyOnChange();
     }
-    
+
     public void refreshOnlyView() {
         treeViewer.refresh();
     }
@@ -250,7 +246,7 @@ public class TreeViewController implements ButtonGroupEventListener {
     }
 
     private static class ContentProvider implements IStructuredContentProvider, ITreeContentProvider {
-        protected List<ItemLaunchConfiguration> configurations;
+        protected List<LaunchConfigurationWrapper> configurations;
 
         @Override
         public Object[] getElements(Object inputElement) {
@@ -265,7 +261,7 @@ public class TreeViewController implements ButtonGroupEventListener {
         @Override
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
             if (newInput instanceof List<?>)
-                configurations = (List<ItemLaunchConfiguration>) newInput;
+                configurations = (List<LaunchConfigurationWrapper>) newInput;
         }
 
         @Override
@@ -288,7 +284,7 @@ public class TreeViewController implements ButtonGroupEventListener {
         @Override
         public Image getColumnImage(Object element, int columnIndex) {
             if (columnIndex == 0) {
-                return DebugPluginImages.getImage(((ItemLaunchConfiguration) element).get(Attr.ICON_ID));
+                return DebugPluginImages.getImage(((LaunchConfigurationWrapper) element).get(Attr.ICON_ID));
             } else {
                 return null;
             }
@@ -296,7 +292,7 @@ public class TreeViewController implements ButtonGroupEventListener {
 
         @Override
         public String getColumnText(Object element, int columnIndex) {
-            ItemLaunchConfiguration config = ((ItemLaunchConfiguration) element);
+            LaunchConfigurationWrapper config = ((LaunchConfigurationWrapper) element);
             switch (columnIndex) {
             case 0:
                 return config.get(Attr.GROUP);
@@ -305,7 +301,7 @@ public class TreeViewController implements ButtonGroupEventListener {
             case 2:
                 return config.get(Attr.LAUNCH_MODE);
             case 3:
-                String columnText = ItemProps
+                String columnText = LaunchProps
                         .getPostLaunchName(PostLaunchAction.valueOf(config.get(Attr.POST_LAUNCH_ACTION)));
                 if (config.get(Attr.POST_LAUNCH_ACTION).equals(PostLaunchAction.DELAY)) {
                     columnText += " " + config.get(Attr.DELAY) + " seconds";

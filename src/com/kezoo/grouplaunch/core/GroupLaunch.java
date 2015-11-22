@@ -1,29 +1,21 @@
 package com.kezoo.grouplaunch.core;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Semaphore;
-
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubProgressMonitor;
-import org.eclipse.debug.core.DebugEvent;
 import org.eclipse.debug.core.DebugException;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.Launch;
-import org.eclipse.debug.core.model.IDebugTarget;
-import org.eclipse.debug.core.model.IProcess;
-import org.eclipse.debug.core.model.ISourceLocator;
-
-import com.kezoo.grouplaunch.core.ItemProps.Attr;
-import com.kezoo.grouplaunch.core.ItemProps.PostLaunchAction;
+import com.kezoo.grouplaunch.core.LaunchProps.Attr;
+import com.kezoo.grouplaunch.core.LaunchProps.PostLaunchAction;
 
 public class GroupLaunch extends Launch {
 
     ILaunchConfiguration initialConfig;
-    List<ItemLaunchConfiguration> configurations;
+    List<LaunchConfigurationWrapper> configurations;
     List<ILaunch> children;
     int lastExecutedConfig = -1;
     IProgressMonitor monitor;
@@ -44,7 +36,7 @@ public class GroupLaunch extends Launch {
     }
 
     public void launch() {
-        // start task
+        monitor.subTask("Launching " + initialConfig.getName());
         while (!terminated && lastExecutedConfig < configurations.size() - 1) {
             lastExecutedConfig++;
             if (!Boolean.parseBoolean(configurations.get(lastExecutedConfig).get(Attr.ENABLED))) {
@@ -53,6 +45,7 @@ public class GroupLaunch extends Launch {
             try {
                 ILaunch child = launch(configurations.get(lastExecutedConfig));
                 if (child != null) {
+                    monitor.subTask("Launching " + child.getLaunchConfiguration().getName());
                     children.add(child);
                     addProcesses(child.getProcesses());
                     processPostLaunchAction();
@@ -60,19 +53,23 @@ public class GroupLaunch extends Launch {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+        if (children.isEmpty()) {
+            try {
+                terminate();
+            } catch (Exception e) {
 
+            }
         }
         launchedAllChildren = true;
-        // end task
-        // if !terminate
     }
 
-    private ILaunch launch(ItemLaunchConfiguration configuration) throws CoreException {
+    private ILaunch launch(LaunchConfigurationWrapper configuration) throws CoreException {
         ILaunchConfiguration innerConfiguration = GroupLaunchConfigurationDelegate
                 .getLaunchConfiguration(configuration);
         try {
             return innerConfiguration.launch(configuration.get(Attr.LAUNCH_MODE),
-                    new SubProgressMonitor(monitor, 1000 / 5));
+                    new SubProgressMonitor(monitor, 1000 / configurations.size()));
         } catch (Exception e) {
 
         }
@@ -81,22 +78,25 @@ public class GroupLaunch extends Launch {
     }
 
     private void processPostLaunchAction() {
-        ItemLaunchConfiguration currentConfig = configurations.get(lastExecutedConfig);
+        LaunchConfigurationWrapper currentConfig = configurations.get(lastExecutedConfig);
         ILaunch currentLaunch = children.get(lastExecutedConfig);
         PostLaunchAction action = PostLaunchAction.valueOf(currentConfig.get(Attr.POST_LAUNCH_ACTION));
         switch (action) {
         case DELAY: {
+            int delaySeconds = Integer.parseInt(currentConfig.get(Attr.DELAY));
+            monitor.subTask("Waiting for  " + delaySeconds + " seconds");
             try {
-                Thread.currentThread().sleep(1000 * Integer.parseInt(currentConfig.get(Attr.DELAY)));
+                Thread.sleep(1000 * delaySeconds);
             } catch (Exception e) {
 
             }
             break;
         }
         case WAIT_UNTIL_STOP: {
+            monitor.subTask("Waiting for  " + currentLaunch.getLaunchConfiguration().getName() + " stop");
             while (!currentLaunch.isTerminated()) {
                 try {
-                    Thread.currentThread().sleep(1000 * 5);
+                    Thread.sleep(1000 * 5);
                 } catch (Exception e) {
 
                 }
@@ -108,13 +108,8 @@ public class GroupLaunch extends Launch {
             // nothing
             break;
         }
+        monitor.subTask("");
     }
-
-    // @Override
-    // public void launchConfigurationRemoved(ILaunchConfiguration
-    // configuration) {
-    //
-    // }
 
     @Override
     public void terminate() throws DebugException {
@@ -137,13 +132,4 @@ public class GroupLaunch extends Launch {
     public ILaunchConfiguration getLaunchConfiguration() {
         return initialConfig;
     }
-
-    // private boolean isRemote(ILaunchConfiguration configuration) {
-    // try {
-    // return
-    // configuration.getType().getIdentifier().equals("org.eclipse.jdt.launching.remoteJavaApplication");
-    // } catch (Exception e) {
-    // return false;
-    // }
-    // }
 }
