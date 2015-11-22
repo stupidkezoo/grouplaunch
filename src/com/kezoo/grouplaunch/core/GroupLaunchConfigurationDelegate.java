@@ -152,14 +152,12 @@ public class GroupLaunchConfigurationDelegate extends LaunchConfigurationDelegat
 
     @Override
     public ILaunch getLaunch(ILaunchConfiguration configuration, String mode) throws CoreException {
-        // TODO Auto-generated method stub
         return new GroupLaunch(configuration);
     }
 
     @Override
     public boolean buildForLaunch(ILaunchConfiguration configuration, String mode, IProgressMonitor monitor)
             throws CoreException {
-        // TODO Auto-generated method stub
         return false;
     }
 

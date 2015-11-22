@@ -126,6 +126,7 @@ public class GroupLaunchConfigurationTab extends AbstractLaunchConfigurationTab
             try {
 
                 ILaunchConfiguration configuration = manager.getLaunchConfiguration(config.get(Attr.MEMENTO));
+                //some magic
                 boolean valid = DebugUIPlugin.doLaunchConfigurationFiltering(configuration)
                         && !WorkbenchActivityHelper.filterItem(configuration);
                 if (valid) {
